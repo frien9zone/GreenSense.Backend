@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GreenSense.Backend.API/GreenSense.Backend.API.csproj" />
+  <Project Path="GreenSense.Backend.Data/GreenSense.Backend.Data.csproj" />
+</Solution>
