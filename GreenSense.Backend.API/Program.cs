@@ -13,7 +13,7 @@ namespace GreenSense.Backend.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Docker: приложение слушает на всех интерфейсах контейнера
+            // Docker/Render: приложение слушает на всех интерфейсах контейнера
             builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
             // Add services to the container.
@@ -65,15 +65,34 @@ namespace GreenSense.Backend.API
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            // ✅ Swagger в Production по флагу (Render обычно запускает Production)
+            var enableSwagger =
+                app.Environment.IsDevelopment() ||
+                string.Equals(app.Configuration["Swagger:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
+
+            if (enableSwagger)
             {
                 app.MapOpenApi();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            // ✅ Чтобы корень сайта не был "Not Found"
+            // Если Swagger включен — редиректим на него, иначе просто показываем, что сервис жив.
+            app.MapGet("/", () =>
+            {
+                if (enableSwagger)
+                    return Results.Redirect("/swagger");
+
+                return Results.Ok("GreenSense Backend is running. Use /api/* endpoints.");
+            });
+
+            // ✅ В Render HTTPS терминируется на прокси, внутри контейнера HTTPS порта нет.
+            // Поэтому редирект делаем только локально (в Development).
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             // ВАЖНО: сначала authentication, потом authorization
             app.UseAuthentication();
