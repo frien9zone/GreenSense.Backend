@@ -21,7 +21,6 @@ namespace GreenSense.Backend.API.Controllers
         [HttpPost]
         public async Task<ActionResult<PlantResponse>> Create([FromBody] PlantCreateRequest request)
         {
-            // optional: проверим что user существует
             var userExists = await _db.Users.AnyAsync(u => u.UserId == request.UserId);
             if (!userExists)
                 return BadRequest("UserId not found.");

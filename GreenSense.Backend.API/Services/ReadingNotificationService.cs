@@ -19,7 +19,6 @@ public class ReadingNotificationService : IReadingNotificationService
 
     public async Task EvaluateAndCreateNotificationIfNeededAsync(int readingId, CancellationToken ct = default)
     {
-        // Берём reading + sensor (чтобы получить PlantId и SensorType)
         var reading = await _db.SensorReadings
             .AsNoTracking()
             .Include(r => r.Sensor)
@@ -31,7 +30,6 @@ public class ReadingNotificationService : IReadingNotificationService
         var sensor = reading.Sensor;
         var plantId = sensor.PlantId;
 
-        // Берём последние threshold settings для plant
         var thresholds = await _db.ThresholdSettings
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.PlantId == plantId, ct);
@@ -39,8 +37,6 @@ public class ReadingNotificationService : IReadingNotificationService
         if (thresholds is null)
             return;
 
-        // Определяем, какие Min/Max использовать по SensorType
-        // (чтобы не зависеть от точных названий enum)
         var sensorTypeName = sensor.SensorType.ToString();
 
         double min;
@@ -58,7 +54,6 @@ public class ReadingNotificationService : IReadingNotificationService
         }
         else
         {
-            // Для других типов сенсоров (если появятся) пороги пока не настроены
             return;
         }
 
@@ -70,16 +65,12 @@ public class ReadingNotificationService : IReadingNotificationService
         if (!belowMin && !aboveMax)
             return;
 
-        // Тип нотификации
         var type = belowMin ? "BelowMin" : "AboveMax";
 
-        // Сообщение (простое, но понятное)
         var message = belowMin
             ? $"{sensorTypeName}: value {value.ToString(CultureInfo.InvariantCulture)} ниже мінімуму {min.ToString(CultureInfo.InvariantCulture)}"
             : $"{sensorTypeName}: value {value.ToString(CultureInfo.InvariantCulture)} вище максимуму {max.ToString(CultureInfo.InvariantCulture)}";
 
-        // (Опционально) анти-спам: не создавать дубликат такого же типа за последние N минут
-        // Сейчас пропускаем, чтобы было проще по лабе.
 
         var notification = new Notification
         {

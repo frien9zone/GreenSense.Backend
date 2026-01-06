@@ -20,13 +20,12 @@ public class ReportsController : ControllerBase
     [HttpGet("system-status")]
     public async Task<IActionResult> GetSystemStatusCsv()
     {
-        // Вытягиваем строки отчёта (каждая строка = один сенсор)
         var rows = await _db.Sensors
             .AsNoTracking()
             .Select(s => new
             {
                 s.PlantId,
-                PlantName = s.Plant.Name, // <-- если у Plant поле называется иначе (например Title) — замени тут
+                PlantName = s.Plant.Name,
                 s.SensorId,
                 SensorType = s.SensorType.ToString(),
                 s.IsActive,
@@ -46,7 +45,6 @@ public class ReportsController : ControllerBase
             .ThenBy(r => r.SensorId)
             .ToListAsync();
 
-        // Формируем CSV
         var sb = new StringBuilder();
 
         sb.AppendLine("PlantId,PlantName,SensorId,SensorType,IsActive,LastValue,LastMeasuredAt,HasUnreadNotifications");
@@ -76,7 +74,6 @@ public class ReportsController : ControllerBase
 
     private static string Csv(string value)
     {
-        // CSV escaping: если есть запятая/кавычки/перенос строки — оборачиваем в кавычки и удваиваем кавычки
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
         {
             value = value.Replace("\"", "\"\"");

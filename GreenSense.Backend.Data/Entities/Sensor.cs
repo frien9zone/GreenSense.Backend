@@ -17,7 +17,6 @@ namespace GreenSense.Backend.Data.Entities
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        // Navigation
         public ICollection<SensorReading> SensorReadings { get; set; } = new List<SensorReading>();
     }
 }

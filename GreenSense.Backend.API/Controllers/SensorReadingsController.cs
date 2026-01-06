@@ -33,7 +33,6 @@ public class SensorReadingsController : ControllerBase
         _db.SensorReadings.Add(reading);
         await _db.SaveChangesAsync();
 
-        // ✅ 3.2.1: после сохранения reading — проверяем thresholds и создаём notification при необходимости
         await _readingNotificationService.EvaluateAndCreateNotificationIfNeededAsync(reading.ReadingId);
 
         return CreatedAtAction(nameof(GetById), new { id = reading.ReadingId }, reading.ToResponse());
@@ -50,7 +49,7 @@ public class SensorReadingsController : ControllerBase
         return reading.ToResponse();
     }
 
-    // GET: api/sensorreadings?sensorId=1&from=...&to=...&limit=200
+    // GET: api/sensorreadings
     [HttpGet]
     public async Task<ActionResult<List<ReadingResponse>>> GetList(
         [FromQuery] int sensorId,

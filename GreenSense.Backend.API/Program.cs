@@ -13,7 +13,7 @@ namespace GreenSense.Backend.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Docker/Render: приложение слушает на всех интерфейсах контейнера
+            // Docker/Render
             builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
             // Add services to the container.
@@ -33,7 +33,6 @@ namespace GreenSense.Backend.API
             // JWT services
             builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
-            // ✅ 3.2.1 — сервис автоматического создания Notification по Threshold
             builder.Services.AddScoped<IReadingNotificationService, ReadingNotificationService>();
 
             // Authentication (JWT Bearer)
@@ -71,7 +70,6 @@ namespace GreenSense.Backend.API
                 db.Database.Migrate();
             }
 
-            // ✅ Swagger в Production по флагу (Render запускает Production)
             var enableSwagger =
                 app.Environment.IsDevelopment() ||
                 string.Equals(app.Configuration["Swagger:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
@@ -83,7 +81,6 @@ namespace GreenSense.Backend.API
                 app.UseSwaggerUI();
             }
 
-            // ✅ Чтобы корень сайта не был "Not Found"
             app.MapGet("/", () =>
             {
                 if (enableSwagger)
@@ -92,13 +89,11 @@ namespace GreenSense.Backend.API
                 return Results.Ok("GreenSense Backend is running. Use /api/* endpoints.");
             });
 
-            // ✅ HTTPS редирект только локально
             if (app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
             }
 
-            // ВАЖНО: сначала authentication, потом authorization
             app.UseAuthentication();
             app.UseAuthorization();
 

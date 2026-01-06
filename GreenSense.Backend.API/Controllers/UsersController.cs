@@ -46,7 +46,6 @@ public class UsersController : ControllerBase
         if (user is null)
             return NotFound();
 
-        // verify current password
         if (!PasswordHasher.Verify(request.CurrentPassword, user.PasswordHash))
             return BadRequest("Current password is incorrect.");
 
