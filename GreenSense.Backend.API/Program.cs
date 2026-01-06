@@ -65,7 +65,13 @@ namespace GreenSense.Backend.API
 
             var app = builder.Build();
 
-            // ✅ Swagger в Production по флагу (Render обычно запускает Production)
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<GreenSenseDbContext>();
+                db.Database.Migrate();
+            }
+
+            // ✅ Swagger в Production по флагу (Render запускает Production)
             var enableSwagger =
                 app.Environment.IsDevelopment() ||
                 string.Equals(app.Configuration["Swagger:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
@@ -78,7 +84,6 @@ namespace GreenSense.Backend.API
             }
 
             // ✅ Чтобы корень сайта не был "Not Found"
-            // Если Swagger включен — редиректим на него, иначе просто показываем, что сервис жив.
             app.MapGet("/", () =>
             {
                 if (enableSwagger)
@@ -87,8 +92,7 @@ namespace GreenSense.Backend.API
                 return Results.Ok("GreenSense Backend is running. Use /api/* endpoints.");
             });
 
-            // ✅ В Render HTTPS терминируется на прокси, внутри контейнера HTTPS порта нет.
-            // Поэтому редирект делаем только локально (в Development).
+            // ✅ HTTPS редирект только локально
             if (app.Environment.IsDevelopment())
             {
                 app.UseHttpsRedirection();
